@@ -83,7 +83,7 @@
 				echo "<b>Add New Event:</b>" . form_input('event_data') . "<br>";
 				echo "Month:" . form_dropdown('event_month', range(1, 12), $this->pdata['month']-1);			
 				echo "Day:" . form_dropdown('event_day', range(1, cal_days_in_month(CAL_GREGORIAN, 
-										$this->pdata['month'], $this->pdata['year'])), date('j')-1);
+					$this->pdata['month'], $this->pdata['year'])), date('j')-1);
 				echo "Year:" . form_dropdown('event_year', $form_years);	
 				
 				//check if user is admin of at least one group
@@ -105,7 +105,7 @@
 				echo "<p><b>View A Day: </b>";
 				echo "<br> Month:" . form_dropdown('event_month', range(1, 12), $this->pdata['month']-1);			
 				echo "Day:" . form_dropdown('event_day', range(1, cal_days_in_month(CAL_GREGORIAN, 
-										$this->pdata['month'], $this->pdata['year'])), date('j')-1);
+					$this->pdata['month'], $this->pdata['year'])), date('j')-1);
 				echo "Year:" . form_dropdown('event_year', $form_years);
 				echo "  " . form_submit('submit', 'View Day');
 			echo form_close();				
@@ -122,7 +122,7 @@
 		$('.calendar .day').click(function(){		
 			event_day = $(this).find('.day_num').html();	
 			path = '<?php  echo site_url() . "/calendar/index/" . $this->pdata['year']
-													. "/" . $this->pdata['month']; ?>';	
+				. "/" . $this->pdata['month']; ?>';	
 			method = "post";
 			form = document.createElement("form");
 			form.setAttribute("action", path);
