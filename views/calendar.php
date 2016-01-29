@@ -6,44 +6,37 @@
 	
 	<!-- css styling inside calendar -->
 	<style type="text/css">
-		.calendar .month
-		{
+		.calendar .month{
 			font-family: textile, cursive; 
 		}
-		.calendar .days td
-		{
+		.calendar .days td{
 			width: 150px; height: 80px; padding: 4px;
 			border: 1px solid #F4A460;
 			vertical-align: top;
 			background-color: #F2F2F2;
 		}
-		.calendar .day:hover
-		{
+		.calendar .day:hover{
 			background-color: #E6E6E6;
 		}
-		.calendar .weeks td
-		{
+		.calendar .weeks td{
 			font-size: 16px;
 			font-family: textile, cursive;
 			font-weight: normal;
 			border: 1px solid white;
 			background-color: #228B22;
 		}
-		table.calendar			
-		{
+		table.calendar{
 			margin-top: 0px;
 			margin-bottom: 0px;
 			margin-left: 0px;
 			margin-right: 0px;
 		}
-		.calendar .highlight
-		{
+		.calendar .highlight{
 			font-size: 18px;
 			font-weight: bold; 
 			color: #00F;
 		}
-		.groupname
-		{
+		.groupname{
 			font-family: Arial Rounded MT Bold;
 			font-size: 12px;
 			text-align: left;
@@ -51,10 +44,8 @@
 	</style>
 	
 	<!-- make src point to jquery library from google -->
-	<script
-		src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js">
 	</script>
-	
 </head>
 <body>
 	<?php 	
@@ -90,7 +81,8 @@
 				if($ownedGroupsArr){
 					foreach($ownedGroupsArr as $owned)
 						$ownedGroups[$owned] = $owned;
-					echo form_submit('AddForSelf', 'Add For You') . form_dropdown('groupName', $ownedGroups) . 
+					echo form_submit('AddForSelf', 'Add For You') . 
+						form_dropdown('groupName', $ownedGroups) . 
 						form_submit('AddForGroup', 'Add For Group');
 				}
 				else{
@@ -103,8 +95,10 @@
 			$hidden = array('view_day_request' => '1');
 			echo form_open($form_path, '', $hidden);
 				echo "<p><b>View A Day: </b>";
-				echo "<br> Month:" . form_dropdown('event_month', range(1, 12), $this->pdata['month']-1);			
-				echo "Day:" . form_dropdown('event_day', range(1, cal_days_in_month(CAL_GREGORIAN, 
+				echo "<br> Month:" . 
+					form_dropdown('event_month', range(1, 12), $this->pdata['month']-1);			
+				echo "Day:" . 
+					form_dropdown('event_day', range(1, cal_days_in_month(CAL_GREGORIAN, 
 					$this->pdata['month'], $this->pdata['year'])), date('j')-1);
 				echo "Year:" . form_dropdown('event_year', $form_years);
 				echo "  " . form_submit('submit', 'View Day');
