@@ -32,8 +32,7 @@ class Calendar extends Controller{
 			if(!$month){ $month = date('m'); }
 			
 			//check to see if there is a new post requesting to edit an event
-			if($this->input->post('submitEdit'))
-			{
+			if($this->input->post('submitEdit')){
 				$eventID = $this->input->post('eventID');
 				$event = $this->input->post('event_data');			
 				if($event != null)
@@ -42,8 +41,7 @@ class Calendar extends Controller{
 					$this->Calendarmodel->remove_event($eventID);
 			}			
 			//check to see if there is a new post requesting to add an event
-			else if($event_data = $this->input->post('event_data'))
-			{
+			else if($event_data = $this->input->post('event_data')){
 				$event_year = $this->input->post('event_year');
 				//adjust day and month since they are both off by 1 for some reason
 				$event_month = $this->input->post('event_month') + 1;
@@ -51,82 +49,67 @@ class Calendar extends Controller{
 				$event_date = $event_year."-".$event_month."-".$event_day;
 				
 				//check if it is an admin adding a group event
-				if($addForGroup = $this->input->post('AddForGroup'))
-				{
+				if($addForGroup = $this->input->post('AddForGroup')){
 					$groupName = $this->input->post('groupName');
 					$this->Calendarmodel->add_group_event($event_date, $event_data, $groupName);
 				}
-				else
-				{
+				else{
 					//if it's a regular user
 					$this->Calendarmodel->add_event($event_date, $event_data);
 				}
 			}
 			
 			//check to see if there is a new post requesting to delete an event
-			if($this->input->post('submitDelete'))
-			{	
+			if($this->input->post('submitDelete')){	
 				$eventToDelete = $this->input->post('eventID');
 				$this->Calendarmodel->remove_event($eventToDelete);
 			}
 			
 			//check to see if there is a new post requesting to invite people to an event
-			if($this->input->post('submitInvite'))
-			{
+			if($this->input->post('submitInvite')){
 				$eventID = $this->input->post('eventID');
 				$eventDate = $this->input->post('event_date');
 				if($groupName = $this->input->post('groupName'))
-				{
 					$userArray = $this->Calendarmodel->get_group_members($groupName);
-				}
 				else
-				{
 					$userArray = $this->input->post('userArray');
-				}
 				$eventOwner = $this->User->get_id($this->session->userdata('un'));
 				$groupID = null;
 				//get the groupID
 				$gid = $this->db->query("SELECT gid FROM usergroup WHERE uid='$eventOwner'")->result();
 				foreach($gid as $row)
-				{
 					$groupID = $row->gid;
-				}
 				$this->Calendarmodel->invite_to_event($eventID, $groupID, $userArray, $eventDate);
 				?>
-				<script type="text/javascript">alert("Selected members were invited!");</script>
+				<script> alert("Selected members were invited!"); </script>
 				<?php
 			}
 			
 			//check to see if there is a new post requesting to join an event
-			if($this->input->post('submitJoin'))
-			{
+			if($this->input->post('submitJoin')){
 				$eventID = $this->input->post('eventID');
 				$userName = $this->session->userdata('un');
 				$this->Calendarmodel->join_event($eventID, $userName);
 			}			
 			
 			//check to see if there is a new post requesting to drop an event
-			if($this->input->post('submitDrop'))
-			{
+			if($this->input->post('submitDrop')){
 				$eventID = $this->input->post('eventID');
 				$userName = $this->session->userdata('un');
 				$this->Calendarmodel->drop_event($eventID, $userName);
 			}
 			
 			//check to see if there is a new post requesting to view the day
-			if( $this->input->post('view_day_request') || isset($_SERVER['QUERY_STRING']['load_day']) )
-			{
+			if( $this->input->post('view_day_request') || isset($_SERVER['QUERY_STRING']['load_day']) ){
 				//if it's the php post
-				if($this->input->post('event_month'))
-				{
+				if($this->input->post('event_month')){
 					$event_day = $this->input->post('event_day') + 1;
 					$event_year = $this->input->post('event_year');
 					$event_month = $this->input->post('event_month') + 1;
 					//add a leading zero if month or day are only one digit
 					$event_month = sprintf("%02s",$event_month);
 				}
-				else 		//if it's the Ajax post
-				{
+				else{               //if it's the Ajax post
 					parse_str($_SERVER['QUERY_STRING'], $_GET);		//enable $_GET
 					$event_day = $_GET['event_day'];
 					$event_year = $year;
@@ -141,18 +124,14 @@ class Calendar extends Controller{
 				$this->pdata['day'] = $event_day;
 				//display the day view
 				if($event_day)
-				{
 					$this->load->view('calendar_day_view', $this->pdata);
-				}
-				else
-				{
+				else{
 					$this->pdata['content'] = $this->Calendarmodel->myGenerate($year, $month);
 					$this->load->view('calendar', $this->pdata);
 				}
 			}
 			//if not, then show the month view
-			else		
-			{
+			else{
 				//generate calendar content to pass to the view
 				$this->pdata['content'] = $this->Calendarmodel->myGenerate($year, $month);
 				$this->pdata['year'] = $year;
@@ -162,8 +141,7 @@ class Calendar extends Controller{
 			}
 			return 1;
 		}
-		else
-		{
+		else{
 			$this->pdata['content'] = 'NOT LOGGED IN
 				<p><a href="' . site_url() . '/auth">LOGIN</a> to view your calendar';
 			//display the error message instead of month view
@@ -174,8 +152,7 @@ class Calendar extends Controller{
 	
 	
 	//tests all of the calendar functions
-	function test()    
-	{	
+	function test(){	
 		$year = date('Y');
 		$month = date('m');
 		$day = date('j');
