@@ -51,29 +51,24 @@ class Calendarmodel extends Model
 		';
 	}
 	
-	function view_day($date)  		//function to get data for the day
-	{
+	function view_day($date){               //function to get data for the day
 		$groupName = $this->get_enrolled_groups();
 		$userName = $this->session->userdata('un');
 		$day_data = array();
 		
-		foreach($groupName as $group)
-		{
+		foreach($groupName as $group){
 			//a fix for groups with names longer than 32 characters
 			if(strlen($group) > 32)
 				$group = substr($group, 0, 32);
 			//get all the group events for the day along with their corresponding eventID
-			$groupEvents = $this->db->query("SELECT data, eventID, user FROM calendar WHERE 
-						date='$date' AND user='$group'")->result();	
-			if($groupEvents)
-			{		
+			$groupEvents = $this->db->query("SELECT data, eventID, user FROM calendar
+				WHERE date='$date' AND user='$group'")->result();	
+			if($groupEvents){		
 				//push each event onto $day_data array
-				foreach($groupEvents as $row)   
-				{
+				foreach($groupEvents as $row){
 					//make it blue
-					array_push($day_data, "<small><font color='blue' size='1'>&#9830</small></font> " . 
-									"<font color='blue'>" . $row->data . "</font>\t(Group event 
-									for " . $group . ")");
+					array_push($day_data, "<small><font color='blue' size='1'>&#9830</small></font> "
+						. "<font color='blue'>" . $row->data . "</font>\t(Group event for " . $group . ")");
 					//if user is an admin of the group
 					if($this->is_an_owner($group))
 						array_push($day_data, $row->eventID);
@@ -83,13 +78,11 @@ class Calendarmodel extends Model
 			}
 		}		
 		//get all the user's events for the day along with their corresponding eventID
-		$primaryEvents = $this->db->query("SELECT data, eventID, user FROM calendar WHERE 
-					date='$date' AND user='$userName'")->result();	
-		if($primaryEvents)
-		{		
+		$primaryEvents = $this->db->query("SELECT data, eventID, user FROM calendar
+			WHERE date='$date' AND user='$userName'")->result();	
+		if($primaryEvents){		
 			//save each event into $day_data array
-			foreach($primaryEvents as $row)   
-			{
+			foreach($primaryEvents as $row){
 				array_push($day_data, "<big>&#8226</big>" . $row->data);
 				array_push($day_data, $row->eventID);
 			}
@@ -97,43 +90,36 @@ class Calendarmodel extends Model
 		return $day_data;
 	}
 	
-	function view_day_invites($date)   //function to get events user is invited to
-	{
+	function view_day_invites($date){   //function to get events user is invited to
 		$userName = $this->session->userdata('un');
 		$invite_data = array();
 		
 		//get all the events that the user is invited to (by querying calendar_rsvp table)
 		$invitedEvents = $this->db->query("SELECT eventID FROM calendar_rsvp WHERE name='$userName'")->result();
-		if($invitedEvents)
-		{
-			foreach($invitedEvents as $row)
-			{
+		if($invitedEvents){
+			foreach($invitedEvents as $row){
 				$eventID = $row->eventID;
-				
 				//get the date, event data and owner of the event
 				$eventOwner = null;
 				$eventDate = null;
 				$eventData = null;
 				$result = $this->db->query("SELECT user, date, data FROM calendar WHERE eventID='$eventID'")->result();
 				//if the event still exists
-				if($result)
-				{
-					foreach($result as $xyz)
-					{
+				if($result){
+					foreach($result as $xyz){
 						$eventOwner = $xyz->user;
 						$eventDate = $xyz->date;
 						$eventData = $xyz->data;
 					}
-					if($eventDate == $date)
-					{
+					if($eventDate == $date){
 						//add the event to the array of events
-						array_push($invite_data, "<big>&#8226</big>" . $eventData . "\t(invited by " . $eventOwner . ")");
+						array_push($invite_data, "<big>&#8226</big>" . $eventData
+							. "\t(invited by " . $eventOwner . ")");
 						array_push($invite_data, ($eventID));
 					}
 				}
 				//if the event does not exist
-				else
-				{
+				else{
 					//clean up the calendar_rsvp table
 					$this->db->query("DELETE FROM calendar_rsvp WHERE eventID='$eventID'");
 				}
@@ -142,105 +128,82 @@ class Calendarmodel extends Model
 		return $invite_data;
 	}
 	
-	function add_event($date, $event, $eventID = null)   	
-	{
+	function add_event($date, $event, $eventID = null){
 		//prevent scripts and SQL-injection
 		$event = mysql_real_escape_string(htmlspecialchars($event));
 		$userName = $this->session->userdata('un');
 		
-		if($eventID)
-		{
+		if($eventID){
 			//if it's an event for testing
-			if($eventID == 1)
-			{
-				$this->remove_event(1);		//clean up previous test events if they are there
+			if($eventID == 1){
+				$this->remove_event(1);	         //clean up previous test events if they are there
 				return $this->db->query("INSERT INTO calendar (user, date, data, eventID) 
-										VALUES ('$userName', '$date', '$event', 1)");
+					VALUES ('$userName', '$date', '$event', 1)");
 			}
 			//if it's a user's event being updated
-			elseif($this->db->query("SELECT data FROM calendar WHERE eventID='$eventID'")->result())
-			{
+			elseif($this->db->query("SELECT data FROM calendar WHERE eventID='$eventID'")->result()){
 				//update the event
-				return $this->db->query("UPDATE calendar SET data='$event', 
-										date='$date' WHERE eventID='$eventID'");
+				return $this->db->query("UPDATE calendar SET data='$event', date='$date' 
+					WHERE eventID='$eventID'");
 			}
 		}
-		else
-		{
+		else{
 			$userName = $this->session->userdata('un');
 			//add the event for the user in the calendar table 
 			return $this->db->query("INSERT INTO calendar (user, date, data) 
-									VALUES ('$userName', '$date', '$event')");
+				VALUES ('$userName', '$date', '$event')");
 		}
 	}
 	
-	function add_group_event($date, $event, $groupName, $eventID = null)  
-	{
+	function add_group_event($date, $event, $groupName, $eventID = null){
 		//prevent scripts and SQL-injection
 		$event = mysql_real_escape_string(htmlspecialchars($event));
-		if($this->is_an_owner($groupName))
-		{
-			if($eventID)
-			{
+		if($this->is_an_owner($groupName)){
+			if($eventID){
 				//update the group event if it exists already, otherwise add it
-				if($this->db->query("SELECT data FROM calendar WHERE eventID='$eventID'")->result())
-				{
+				if($this->db->query("SELECT data FROM calendar WHERE eventID='$eventID'")->result()){
 					return $this->db->query("UPDATE calendar SET data='$event', date='$date' 
-																	WHERE eventID='$eventID'");									
+						WHERE eventID='$eventID'");									
 				}
 			}
-			else
-			{
+			else{
 				return $this->db->query("INSERT INTO calendar (user, date, data) 
-										VALUES ('$groupName', '$date', '$event')");
+					VALUES ('$groupName', '$date', '$event')");
 			}
 		}
-		elseif($eventID == 1)		//if it's for testing
-		{
+		elseif($eventID == 1){       //if it's for testing
 			return $this->db->query("INSERT INTO calendar (user, date, data, eventID) 
-									VALUES ('$groupName', '$date', '$event', 1)");
+				VALUES ('$groupName', '$date', '$event', 1)");
 		}
 	}
 	
-	function edit_event($event, $eventID)
-	{
+	function edit_event($event, $eventID){
 		//prevent scripts and SQL-injection
 		$event = mysql_real_escape_string(htmlspecialchars($event));
 		return $this->db->query("UPDATE calendar SET data='$event' WHERE eventID='$eventID'");
 	}
 	
 	
-	function remove_event($eventID)
-	{
+	function remove_event($eventID){
 		return $this->db->query("DELETE FROM calendar WHERE eventID='$eventID'");
 	}
 	
 	
-	function generate_invite_array($groupName = null)
-	{
+	function generate_invite_array($groupName = null){
 		$options = array();
-		
-		if($groupName)
-		{
+		if($groupName){
 			foreach($groupName as $group)
-			{
 				$options[$group] = $group;
-			}
 		}
-		else
-		{
+		else{
 			//get array of groups that the user is part of
 			$enrolledGroupsArr = $this->get_enrolled_groups();
 			//get array of members in each of these groups
-			if($enrolledGroupsArr)
-			{
-				foreach($enrolledGroupsArr as $groupName)
-				{
+			if($enrolledGroupsArr){
+				foreach($enrolledGroupsArr as $groupName){
 					$members = $this->get_group_members($groupName);
 					foreach($members as $member)
-					{
 						$options[$member] = $member;
-					}
 				}
 			}
 		}
@@ -248,76 +211,67 @@ class Calendarmodel extends Model
 	}
 	
 	
-	function invite_to_event($eventID, $groupID, $userArray, $eventDate)
-	{
-		if($userArray)
-		{
+	function invite_to_event($eventID, $groupID, $userArray, $eventDate){
+		if($userArray){
 			//get the event data
 			$eventDataArr = $this->db->query("SELECT data FROM calendar WHERE eventID='$eventID'")->result();
-			foreach($eventDataArr as $row)
-			{
-				$eventData = "<br>You are invited to: " . $row->data . " (on " . $eventDate . 
-								")<br>To accept the invite, go to the day in your calendar.";
+			foreach($eventDataArr as $row){
+				$eventData = "<br>You are invited to: " . $row->data . " (on " 
+					. $eventDate . ")<br>To accept the invite, go to the day in your calendar.";
 			}
 			$from_id = $this->Page->get_uid();
 			$created = date("Y-m-d h:i:s");
 			
-			foreach($userArray as $name)
-			{	
+			foreach($userArray as $name){	
 				//update calendar_rsvp table if the user is not already invited
 				if(! $this->db->query("SELECT name FROM calendar_rsvp 
-					WHERE eventID='$eventID' AND name='$name'")->result())
-				{
+					WHERE eventID='$eventID' AND name='$name'")->result()){
 					$this->db->query("INSERT INTO calendar_rsvp (eventID, groupID, name, unanswered)
-														VALUES ('$eventID', '$groupID', '$name', 1)");
+						VALUES ('$eventID', '$groupID', '$name', 1)");
 				}		
 				
 				//set up fields to send a notification message to the invited user	
 				$to_id = $this->User->get_id($name);
 				//from_id and to_id have to be switched around to make it work correctly
 				$invite = array('from_id' => $to_id,
-								'to_id' => $from_id,
-								'subject' => "Gus Event Invite",
-								'message' => $eventData,
-								'created' => $created,
-								'location' => "inbox"
-								);										
+					'to_id' => $from_id,
+					'subject' => "Gus Event Invite",
+					'message' => $eventData,
+					'created' => $created,
+					'location' => "inbox"
+				);										
 								
 				//add the invite notification to Abhay's messages table 
-				$check = $this->db->query("SELECT id FROM messages WHERE message='$eventData' 
-											AND to_id='$to_id' AND from_id='$from_id'")->result();
+				$check = $this->db->query("SELECT id FROM messages 
+					WHERE message='$eventData' AND to_id='$to_id' 
+					AND from_id='$from_id'")->result();
 				if(! $check)
-				{
 					$this->db->insert("messages" , $invite);	
-				}
 			}		
 		}
 		return 1;
 	}
 	
 	
-	function join_event($eventID, $userName)
-	{
-		return $this->db->query("UPDATE calendar_rsvp SET yes=1, no=0, maybe=0, 
-								unanswered=0 WHERE eventID='$eventID' AND name='$userName'");
+	function join_event($eventID, $userName){
+		return $this->db->query("UPDATE calendar_rsvp SET yes=1, no=0, maybe=0, unanswered=0 
+			WHERE eventID='$eventID' 
+			AND name='$userName'");
 	}
 	
 	
-	function drop_event($eventID, $userName)
-	{
-		return $this->db->query("UPDATE calendar_rsvp SET yes=0, no=1, maybe=0,
-								unanswered=0 WHERE eventID='$eventID' AND name='$userName'");
+	function drop_event($eventID, $userName){
+		return $this->db->query("UPDATE calendar_rsvp SET yes=0, no=1, maybe=0, unanswered=0 
+			WHERE eventID='$eventID' 
+			AND name='$userName'");
 	}
 	
 	
-	function check_if_group_event($item)
-	{
+	function check_if_group_event($item){
 		$userName = $this->session->userdata('un');
 		$result = $this->db->query("SELECT user FROM calendar WHERE eventID='$item'")->result();
-		if($result)
-		{
-			foreach($result as $row)
-			{
+		if($result){
+			foreach($result as $row){
 				if($userName != $row->user)
 					return 1;
 				else
@@ -327,38 +281,31 @@ class Calendarmodel extends Model
 	}
 	
 	
-	function get_owned_groups()		//returns an array of groups that the user is an admin of
-	{
+	function get_owned_groups(){               //returns an array of groups that the user is an admin of
 		$groupArray = array();
 		//get the userID
 		$userID = $this->User->get_id($this->session->userdata('un'));
 		//get the groupID
 		$ownedGroups = $this->db->query("SELECT gid, perm FROM usergroup WHERE uid='$userID'")->result();
-		foreach($ownedGroups as $owned)
-		{
-			if($owned->perm == 7)
-			{			
+		foreach($ownedGroups as $owned){
+			if($owned->perm == 7){			
 				$groupID = $owned->gid;
 				//get the groupName
 				$gName = $this->db->query("SELECT name FROM ggroup WHERE id='$groupID'")->result();
 				foreach($gName as $xyz)
-				{
 					array_push($groupArray, $xyz->name);
-				}
 			}
 		}
 		return $groupArray;
 	}
 	
 	
-	function is_an_owner($groupName)	//returns TRUE if the user is an admin of the specified group
-	{
+	function is_an_owner($groupName){     //returns TRUE if the user is an admin of the specified group
 		$userID = $this->User->get_id($this->session->userdata('un'));
 		$groupID = $this->Group->get_id($groupName);
 		$permissions = $this->db->query("SELECT perm FROM usergroup 
-						WHERE gid='$groupID' AND uid='$userID'")->result();
-		foreach($permissions as $permission)
-		{
+			WHERE gid='$groupID' AND uid='$userID'")->result();
+		foreach($permissions as $permission){
 			if($permission->perm == 7)
 				return 1;
 			else 
@@ -367,52 +314,42 @@ class Calendarmodel extends Model
 	}
 	
 	
-	function get_enrolled_groups()		//returns an array of groups the user is in
-	{
+	function get_enrolled_groups(){               //returns an array of groups the user is in
 		$groupArray = array();
 		//get the userID
 		$userID = $this->User->get_id($this->session->userdata('un'));
 		//get the groupID
 		$gid = $this->db->query("SELECT gid FROM usergroup WHERE uid='$userID'")->result();
-		foreach($gid as $row)
-		{
+		foreach($gid as $row){
 			$groupID = $row->gid;
 			//get the groupName
 			$gName = $this->db->query("SELECT name FROM ggroup WHERE id='$groupID'")->result();
 			foreach($gName as $xyz)
-			{
 				array_push($groupArray, $xyz->name);
-			}
 		}
 		return $groupArray;
 	}
 	
-	function get_group_members($groupName)	//returns an array of members in the specified group
-	{
+	function get_group_members($groupName){       //returns an array of members in the specified group
 		$groupMembers = array();
 		$groupID = $this->Group->get_id($groupName);
 		$userIdArr = $this->db->query("SELECT uid FROM usergroup WHERE gid='$groupID'")->result();
-		foreach($userIdArr as $userID)
-		{
+		foreach($userIdArr as $userID){
 			$id = $userID->uid;
 			$userNameArr = $this->db->query("SELECT un FROM user WHERE id='$id'")->result();
 			foreach($userNameArr as $userName)
-			{
 				array_push($groupMembers, $userName->un);
-			}
 		}
 		return $groupMembers;
 	}
 	
 	
-	function myGenerate($year, $month)
-	{	
+	function myGenerate($year, $month){	
 		//load calendar library with preferences that were specified in the constructor
 		$this->load->library('calendar', $this->pref);
 		
 		//get data for the month
 		$cal_data = $this->get_cal_data($year, $month);
-		
 		//return generated calendar to controller
 		//(codeigniter's generate() function, different than myGenerate())
 		if($result = $this->calendar->generate($year, $month, $cal_data))
@@ -422,42 +359,34 @@ class Calendarmodel extends Model
 	}
 	
 	
-	function get_cal_data($year, $month)
-	{
+	function get_cal_data($year, $month){
 		$userName = $this->session->userdata('un');		
 		$groupName = $this->get_enrolled_groups();
-		$cal_data = array(array());		//2D array since each day can have multiple events
+		$cal_data = array(array());             //2D array since each day can have multiple events
 	
-		foreach($groupName as $group)
-		{
+		foreach($groupName as $group){
 			//a fix for groups with names longer than 32 characters
 			if(strlen($group) > 32)
 				$group = substr($group, 0, 32);
 			//get the user's group events for the month 
-			if($result = $this->db->query("SELECT date, data, user FROM calendar WHERE date
-											LIKE '$year-$month%' AND user='$group'")->result())
-			{
+			if($result = $this->db->query("SELECT date, data, user FROM calendar 
+				WHERE date LIKE '$year-$month%' 
+				AND user='$group'")->result()){
 				//for each event that was a match
-				foreach($result as $row)   
-				{
+				foreach($result as $row)   {
 					//allows for 20 group events in a day
-					for($i=0; $i<20; $i++)
-					{
+					for($i=0; $i<20; $i++){
 						//substr($row->date, 8, 2) is the day part of the date
-						if(!isset($cal_data[substr($row->date, 8, 2)][$i]))
-						{
+						if(!isset($cal_data[substr($row->date, 8, 2)][$i])){
 							//adjust the length and font to show that it's a group event
-							$tmpData = "<font color='blue' size='1'>&#9830</font> " . 
-										"<font color='blue'>" . substr($row->data, 0, 8) . 
-										"</font>";
-							if(strlen($row->data) > 8)
-							{
+							$tmpData = "<font color='blue' size='1'>&#9830</font> "
+								. "<font color='blue'>" . substr($row->data, 0, 8) . "</font>";
+							if(strlen($row->data) > 8){
 								$cal_data[substr($row->date, 8, 2)][$i] = 
-											$tmpData . "<font color='blue'> ... </font>";
+									$tmpData . "<font color='blue'> ... </font>";
 								break;
 							}
-							else
-							{
+							else{
 								$cal_data[substr($row->date, 8, 2)][$i] = $tmpData;
 								break;
 							}
@@ -467,27 +396,21 @@ class Calendarmodel extends Model
 			}
 		}	
 		//get the user's personal events for the month 
-		if($result = $this->db->query("SELECT date, data, user FROM calendar WHERE date 
-										LIKE '$year-$month%' AND user='$userName'")->result())
-		{
-			//for each event that was a match
-			foreach($result as $row)   
-			{
+		if($result = $this->db->query("SELECT date, data, user FROM calendar 
+			WHERE date LIKE '$year-$month%' 
+			AND user='$userName'")->result()){
+			foreach($result as $row)   {       //for each event that was a match
 				//allows for 100 events in a day, maybe excessive
-				for($i=0; $i<100; $i++)
-				{
+				for($i=0; $i<100; $i++){
 					//substr($row->date, 8, 2) is the day part of the date
-					if(!isset($cal_data[substr($row->date, 8, 2)][$i]))
-					{
+					if(!isset($cal_data[substr($row->date, 8, 2)][$i])){
 						//adjust the length
 						$tmpData = "<big>&#8226</big>" . substr($row->data, 0, 8);	
-						if(strlen($row->data) > 8)
-						{
+						if(strlen($row->data) > 8){
 							$cal_data[substr($row->date, 8, 2)][$i] = $tmpData . " ...";
 							break;
 						}
-						else
-						{
+						else{
 							$cal_data[substr($row->date, 8, 2)][$i] = $tmpData;
 							break;
 						}							
